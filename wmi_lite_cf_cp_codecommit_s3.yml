@@ -9,11 +9,6 @@ Parameters:
     Description: Name of the Source CodeCommit Branch
     Type: String
     Default: wmi-lite-sparkjob-dev
-  # DestinationBucketForS3:
-  #   Description: Deployment bucket path
-  #   Type: String
-  #   Default: 
-  #     Fn::ImportValue: DestinationBucketName
   PipelineName:
     Description: Name of codepipeline
     Type: String
@@ -29,12 +24,71 @@ Resources:
     Properties:
       VersioningConfiguration: 
         Status: Enabled
-
+  iamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+          - 
+            Effect: Allow
+            Action:
+              - s3:PutAnalyticsConfiguration
+              - s3:PutAccelerateConfiguration
+              - s3:DeleteObjectVersion
+              - codecommit:GetTree
+              - s3:RestoreObject
+              - s3:CreateBucket
+              - codecommit:GetBlob
+              - codecommit:GetReferences
+              - s3:PutEncryptionConfiguration
+              - s3:ReplicateObject
+              - codecommit:GetCommentsForComparedCommit
+              - codecommit:GetCommit
+              - s3:DeleteBucketWebsite
+              - codecommit:GetComment
+              - s3:AbortMultipartUpload
+              - codecommit:GetCommitHistory
+              - codecommit:GetCommitsFromMergeBase
+              - s3:PutLifecycleConfiguration
+              - codecommit:DescribePullRequestEvents
+              - s3:DeleteObject
+              - s3:DeleteBucket
+              - s3:PutBucketVersioning
+              - codecommit:GetPullRequest
+              - codecommit:GetRepositoryTriggers
+              - s3:PutMetricsConfiguration
+              - s3:PutReplicationConfiguration
+              - codecommit:GitPull
+              - codecommit:BatchGetRepositories
+              - codecommit:GetCommentsForPullRequest
+              - s3:PutBucketCORS
+              - codecommit:GetObjectIdentifier
+              - codecommit:CancelUploadArchive
+              - codecommit:GetFolder
+              - s3:PutInventoryConfiguration
+              - codecommit:BatchGetPullRequests
+              - codecommit:GetFile
+              - s3:PutObject
+              - s3:PutBucketNotification
+              - codecommit:GetUploadArchiveStatus
+              - s3:PutBucketWebsite
+              - s3:PutBucketRequestPayment
+              - codecommit:GetDifferences
+              - s3:PutBucketLogging
+              - codecommit:GetRepository
+              - codecommit:GetBranch
+              - codecommit:GetMergeConflicts
+              - s3:ReplicateDelete
+            Resource:
+              - arn:aws:s3:::haider-ali-invesco-assignment/*
+              - arn:aws:s3:::haider-ali-invesco-assignment
+              - arn:aws:codecommit:us-east-1:585091576682:wmi-lite-sparkjob
   codepipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       Name: !Ref PipelineName
-      RoleArn: arn:aws:iam::585091576682:role/AWS-CodePipeline-Service
+      RoleArn: !GetAtt iamRole.Arn
       ArtifactStore:
         Type: S3
         Location: !Ref s3Bucket
@@ -75,4 +129,7 @@ Resources:
                 ObjectKey: !Ref S3KeyPath
               RunOrder: 1
 
-
+Outputs:
+  DestinationBucket:
+    Description: Information about the value
+    Value: !GetAtt s3Bucket.Arn
