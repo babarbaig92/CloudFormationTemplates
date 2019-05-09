@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CodePipeline Test Template
+Parameters:
+  CodeCommitRepoName:
+    Description: Name of the Repository
+    Type: String
+    Default: wmi-lite-sparkjob
+  CodeCommitBranchName:
+    Description: Name of the Source CodeCommit Branch
+    Type: String
+    Default: wmi-lite-sparkjob-dev
+  # DestinationBucketForS3:
+  #   Description: Deployment bucket path
+  #   Type: String
+  #   Default: 
+  #     Fn::ImportValue: DestinationBucketName
+  PipelineName:
+    Description: Name of codepipeline
+    Type: String
+    Default: wmi-lite-codepipeline-spark
+  S3KeyPath:
+    Description: Name of S3 Key
+    Type: String
+    Default: SparkJob
+
+Resources:
+  s3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration: 
+        Status: Enabled
+
+  codepipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Ref PipelineName
+      RoleArn: arn:aws:iam::585091576682:role/AWS-CodePipeline-Service
+      ArtifactStore:
+        Type: S3
+        Location: !Ref s3Bucket
+      Stages: 
+        - 
+          Name: sourceCodeCommitStage
+          Actions:
+            -
+              Name: sourceCodeCommitAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                -
+                  Name: SourceOutput
+              Configuration:
+                RepositoryName: !Ref CodeCommitRepoName
+                BranchName: !Ref CodeCommitBranchName
+              RunOrder: 1
+        - 
+          Name: sourceDeployStage
+          Actions:
+            -
+              Name: sourceDeployAction
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: S3
+              InputArtifacts:
+              -
+                Name: SourceOutput
+              Configuration:
+                BucketName: !Ref s3Bucket
+                Extract: true
+                ObjectKey: !Ref S3KeyPath
+              RunOrder: 1
+
+
