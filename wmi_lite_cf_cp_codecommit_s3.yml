@@ -24,66 +24,33 @@ Resources:
     Properties:
       VersioningConfiguration: 
         Status: Enabled
+
   iamRole:
     Type: AWS::IAM::Role
     Properties:
+      Path: "/"
       AssumeRolePolicyDocument: 
-        Version: '2012-10-17'
         Statement:
-          - 
-            Effect: Allow
+          - Effect: "Allow"
+            Principal:
+              Service:
+              - codepipeline.amazonaws.com
             Action:
-              - s3:PutAnalyticsConfiguration
-              - s3:PutAccelerateConfiguration
-              - s3:DeleteObjectVersion
-              - codecommit:GetTree
-              - s3:RestoreObject
-              - s3:CreateBucket
-              - codecommit:GetBlob
-              - codecommit:GetReferences
-              - s3:PutEncryptionConfiguration
-              - s3:ReplicateObject
-              - codecommit:GetCommentsForComparedCommit
-              - codecommit:GetCommit
-              - s3:DeleteBucketWebsite
-              - codecommit:GetComment
-              - s3:AbortMultipartUpload
-              - codecommit:GetCommitHistory
-              - codecommit:GetCommitsFromMergeBase
-              - s3:PutLifecycleConfiguration
-              - codecommit:DescribePullRequestEvents
-              - s3:DeleteObject
-              - s3:DeleteBucket
-              - s3:PutBucketVersioning
-              - codecommit:GetPullRequest
-              - codecommit:GetRepositoryTriggers
-              - s3:PutMetricsConfiguration
-              - s3:PutReplicationConfiguration
-              - codecommit:GitPull
-              - codecommit:BatchGetRepositories
-              - codecommit:GetCommentsForPullRequest
-              - s3:PutBucketCORS
-              - codecommit:GetObjectIdentifier
-              - codecommit:CancelUploadArchive
-              - codecommit:GetFolder
-              - s3:PutInventoryConfiguration
-              - codecommit:BatchGetPullRequests
-              - codecommit:GetFile
-              - s3:PutObject
-              - s3:PutBucketNotification
-              - codecommit:GetUploadArchiveStatus
-              - s3:PutBucketWebsite
-              - s3:PutBucketRequestPayment
-              - codecommit:GetDifferences
-              - s3:PutBucketLogging
-              - codecommit:GetRepository
-              - codecommit:GetBranch
-              - codecommit:GetMergeConflicts
-              - s3:ReplicateDelete
-            Resource:
-              - arn:aws:s3:::haider-ali-invesco-assignment/*
-              - arn:aws:s3:::haider-ali-invesco-assignment
-              - arn:aws:codecommit:us-east-1:585091576682:wmi-lite-sparkjob
+              - sts:AssumeRole
+      Policies:
+        - 
+         PolicyName: "root"
+         PolicyDocument:
+           Version: "2012-10-17"
+           Statement:
+              - 
+                Effect: "Allow"
+                Action: "*"
+                Resource:
+                - !Join ['',[!GetAtt s3Bucket.Arn,'/*']]
+                - arn:aws:codecommit:us-east-1:585091576682:wmi-lite-sparkjob
+
+
   codepipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
