@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template creates EMR
+
+Parameters: 
+  CoreInstanceType:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Instance Type of the core node
+    Default: /wmi-lite/staging/EMR-CORE-INSTANCE-TYPE
+  MasterInstanceType:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /wmi-lite/staging/EMR-MASTER-INSTANCE-TYPE
+    Description: Instance Type of the master node
+  CoreInstanceCount:
+    Default: '1'
+    Description: Number of core instances
+    Type: Number
+  Subnet:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Subnet ID for creating the EMR cluster
+    Default: /wmi-lite/staging/NAS-SUBNET-GROUP-ID
+  VPC:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: VPC ID for creating the EMR cluster
+    Default: /wmi-lite/staging/VPCID
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH to the instances
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /wmi-lite/staging/EC2KeyName
+  EMRClusterName:
+    Description: Cluster name for the EMR
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /wmi-lite/staging/EMR-CLUSTERNAME
+  emrReleaseLabel:
+    Default: emr-5.23.0
+    AllowedValues:
+    - emr-5.23.0
+    - emr-5.22.0
+    Description: Release label for the EMR cluster
+    Type: String
+  EMRLogDir:
+    Description: Log Dir for the EMR cluster
+    Type: String
+    Default: s3://haider-ali-invesco-assignment/cf_emr_log
+Resources: 
+  EMRSampleCluster:
+    Properties:
+      Applications:
+      - Name: Hadoop
+      - Name: Spark
+      - Name: Hive
+      - Name: Livy
+      Instances:
+        CoreInstanceGroup:
+          EbsConfiguration:
+            EbsBlockDeviceConfigs:
+            - VolumeSpecification:
+                SizeInGB: '10'
+                VolumeType: gp2
+              VolumesPerInstance: '1'
+            EbsOptimized: 'true'
+          InstanceCount:
+            Ref: CoreInstanceCount
+          InstanceType:
+            Ref: CoreInstanceType
+          Market: ON_DEMAND
+          Name: Core Instance
+        Ec2KeyName:
+          Ref: KeyName
+        Ec2SubnetId:
+          Ref: Subnet
+        MasterInstanceGroup:
+          InstanceCount: '1'
+          InstanceType:
+            Ref: MasterInstanceType
+          Market: ON_DEMAND
+          Name: Master Instance
+        TerminationProtected: 'false'
+      JobFlowRole: EMR_EC2_DefaultRole
+      LogUri:
+        Ref: EMRLogDir
+      Name:
+        Ref: EMRClusterName
+      ReleaseLabel: 
+        Ref: emrReleaseLabel
+      ServiceRole: EMR_DefaultRole
+      Tags:
+      - Key: Name
+        Value: EMRCluster
+      VisibleToAllUsers: 'true'
+    Type: AWS::EMR::Cluster

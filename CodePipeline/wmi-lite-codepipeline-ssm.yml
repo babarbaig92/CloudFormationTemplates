@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  RepositoryName:
+    Description: Name of the repository that manages spark code
+    Type: String
+    Default: wmi-lite-sparkjob
+  BranchName:
+    Description: Name of the branch in above mentioned repository
+    Type: String
+    Default: wmi-lite-sparkjob-dev
+Resources:
+  SparkJobRepository:
+    Type: AWS::SSM::Parameter
+    Properties:
+       Description: Name of codecommit repository that manages spark code
+       Name : /wmi-lite/staging/CODECOMMIT-SPARK-REPO
+       Type : String
+       Value : !Ref RepositoryName
+  SparkJobRepositoryBranch:
+    Type: AWS::SSM::Parameter
+    Properties:
+       Description: Name of branch that manages spark code
+       Name : /wmi-lite/staging/CODECOMMIT-SPARK-BRANCH
+       Type : String
+       Value : !Ref BranchName

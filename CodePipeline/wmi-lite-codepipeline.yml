@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CodePipeline CodeCommit-S3 Template
+Parameters:
+  CodeCommitRepoName:
+    Description: Name of the Repository
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /wmi-lite/staging/CODECOMMIT-SPARK-REPO
+  CodeCommitBranchName:
+    Description: Name of the Source CodeCommit Branch
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /wmi-lite/staging/CODECOMMIT-SPARK-BRANCH
+  PipelineName:
+    Description: Name the pipeline
+    Type: String
+    Default: wmi-lite-codepipeline-spark
+  S3KeyPath:
+    Description: S3 Folder to put spark code
+    Type: String
+    Default: SparkJob
+
+Resources:
+  s3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration: 
+        Status: Enabled
+
+  iamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument: 
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+              - codepipeline.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - 
+         PolicyName: "root"
+         PolicyDocument:
+           Version: "2012-10-17"
+           Statement:
+              - 
+                Effect: "Allow"
+                Action: "*"
+                Resource:
+                - !Join ['',[!GetAtt s3Bucket.Arn,'/*']]
+                - arn:aws:codecommit:us-east-1:585091576682:wmi-lite-sparkjob
+
+
+  codepipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Ref PipelineName
+      RoleArn: !GetAtt iamRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref s3Bucket
+      Stages: 
+        - 
+          Name: sourceCodeCommitStage
+          Actions:
+            -
+              Name: sourceCodeCommitAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                -
+                  Name: SourceOutput
+              Configuration:
+                RepositoryName: !Ref CodeCommitRepoName
+                BranchName: !Ref CodeCommitBranchName
+              RunOrder: 1
+        - 
+          Name: sourceDeployStage
+          Actions:
+            -
+              Name: sourceDeployAction
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: S3
+              InputArtifacts:
+              -
+                Name: SourceOutput
+              Configuration:
+                BucketName: !Ref s3Bucket
+                Extract: true
+                ObjectKey: !Ref S3KeyPath
+              RunOrder: 1
+
+Outputs:
+  DestinationBucket:
+    Description: Information about the value
+    Value: !GetAtt s3Bucket.Arn

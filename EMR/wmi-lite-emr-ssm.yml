@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EMRCoreInstanceType:
+    Description: Type of the core instance
+    Type: String
+    Default: m4.large
+    AllowedValues:
+      - m4.large
+  EMRMasterInstanceType:
+    Description: Type of the master instance
+    Type: String
+    Default: m4.large
+    AllowedValues:
+      - m4.large
+  Ec2KeyName:
+    Description: Name of the keypair for connecting to ec2
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: babar-invesco-training
+  EMRCluster:
+    Description: Name of EMR Cluster
+    Type: String
+    Default: wmi-lite-EMR-cluster
+Resources:
+  CoreEMRInstanceType:
+    Type: AWS::SSM::Parameter
+    Properties:
+       Description: Instance type of Core EMR instance
+       Name : /wmi-lite/staging/EMR-CORE-INSTANCE-TYPE
+       Type : String
+       Value : !Ref EMRCoreInstanceType
+  MasterEMRInstanceType:
+    Type: AWS::SSM::Parameter
+    Properties:
+       Description: Instance type of Master EMR instance
+       Name : /wmi-lite/staging/EMR-MASTER-INSTANCE-TYPE
+       Type : String
+       Value : !Ref EMRMasterInstanceType
+  KeyName:
+    Type: AWS::SSM::Parameter
+    Properties:
+       Description: Name of an existing EC2 KeyPair to enable SSH to the instances
+       Name : /wmi-lite/staging/EC2KeyName
+       Type : String
+       Value : !Ref Ec2KeyName
+  EMRClusterName:
+    Type: AWS::SSM::Parameter
+    Properties:
+       Description: Name of an EMR Cluster
+       Name : /wmi-lite/staging/EMR-CLUSTERNAME
+       Type : String
+       Value : !Ref EMRCluster
